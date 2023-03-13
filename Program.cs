@@ -6,11 +6,91 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 
-namespace GetPrimaryNetworkDeviceInfoExample
+namespace laba1
 {
     public class Program
     {
         public static void Main()
+        {
+            bool isEnd = false;
+            do
+            {
+                Console.WriteLine("Select option: \n1.Host Scanner\n2.Port Scanner\nother key to exit");
+                var result = Console.ReadLine();
+                switch (result)
+                {
+                    case "1":
+                        HostScanner();
+                        break;
+                    case "2":
+                        PortScanner();
+                        break;
+                    default:
+                        isEnd = true;
+                        break;
+                }
+            } while (!isEnd);
+        }
+
+        private static void PortScanner()
+        {
+            int startPort = 0; // начальный порт
+            int endPort = 65535; // конечный порт
+
+            Console.WriteLine("Enter ip address: ");
+            IPAddress ip;
+            while (!IPAddress.TryParse(Console.ReadLine(), out ip))
+            {
+                Console.WriteLine("Try again");
+            }
+            
+            Task[] tasks = new Task[1000];
+            int count = 0;
+            int task_i = 0;
+
+            int check = 1000;
+            
+            for (int i = startPort; i <= endPort; i++)
+            {
+                var endPoint = new IPEndPoint(ip, i);
+                if (count == 1000)
+                {
+                    task_i = Task.WaitAny(tasks);
+                    tasks[task_i] = Task.Run(() => CheckPort(endPoint));
+                }
+                else
+                {
+                    tasks[task_i] = Task.Run(() => CheckPort(endPoint));
+                    count++;
+                    task_i++;
+                }
+
+                if (i == check)
+                {
+                    Console.WriteLine($"{check} ports checked");
+                    check += 1000;
+                }
+            }
+            Task.WaitAll(tasks);
+        }
+
+        private static void CheckPort(IPEndPoint endPoint)
+        {
+            try
+            {
+                using (TcpClient client = new TcpClient())
+                {
+                    client.Connect(endPoint);
+                    Console.WriteLine($"Port {endPoint.Port} is open on {endPoint.Address}");
+                }
+            }
+            catch (SocketException)
+            {
+            }
+        }
+        
+
+        private static void HostScanner()
         {
             var interfaces = NetworkInterface.GetAllNetworkInterfaces();
             ShowInterfacesList(interfaces);
