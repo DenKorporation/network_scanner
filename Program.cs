@@ -43,17 +43,19 @@ namespace laba1
             {
                 Console.WriteLine("Try again");
             }
+
+            int threadCount = 100;
             
-            Task[] tasks = new Task[1000];
+            Task[] tasks = new Task[threadCount];
             int count = 0;
             int task_i = 0;
 
-            int check = 1000;
+            int check = startPort + threadCount + 1000;
             
             for (int i = startPort; i <= endPort; i++)
             {
                 var endPoint = new IPEndPoint(ip, i);
-                if (count == 1000)
+                if (count == threadCount)
                 {
                     task_i = Task.WaitAny(tasks);
                     tasks[task_i] = Task.Run(() => CheckPort(endPoint));
@@ -67,7 +69,7 @@ namespace laba1
 
                 if (i == check)
                 {
-                    Console.WriteLine($"{check} ports checked");
+                    Console.WriteLine($"{check - threadCount} ports checked");
                     check += 1000;
                 }
             }
@@ -171,7 +173,7 @@ namespace laba1
 
             return result;
         }
-        //TODO make async call 
+ 
 
         private static IPAddress? _curHostIp;
         private static string? _curHostMac;
